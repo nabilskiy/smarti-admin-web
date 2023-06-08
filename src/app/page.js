@@ -106,7 +106,8 @@ export default function Categories() {
 
 
   const onSubmit = async (values) => {
-    const addDataResaponse = await addData('categories', values);
+
+    const addDataResaponse = await addData('categories',  values.title, values.videoId, values.videoTitle);
     if (addDataResaponse.error) {
       toast({
         title: 'Error',
@@ -118,17 +119,17 @@ export default function Categories() {
       return;
     }
 
-    const addSubDataResaponse = await addSubData('categories', values.title, null,
-      { title: values.videoTitle, videoId: values.videoId });
-    if (addSubDataResaponse.error) {
-      toast({
-        title: 'Error',
-        description: "Error in saving video",
-        status: 'error',
-        duration: 9000,
-        isClosable: true,
-      });
-    }
+    // const addSubDataResaponse = await addSubData('categories', values.title, null,
+    //   { title: values.videoTitle, videoId: values.videoId });
+    // if (addSubDataResaponse.error) {
+    //   toast({
+    //     title: 'Error',
+    //     description: "Error in saving video",
+    //     status: 'error',
+    //     duration: 9000,
+    //     isClosable: true,
+    //   });
+    // }
     await fetchCategories();
     onClose();
   }
