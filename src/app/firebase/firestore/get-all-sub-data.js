@@ -1,21 +1,23 @@
 import firebase_app from "../config";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { getFirestore, doc, getDoc } from "firebase/firestore";
 
 const db = getFirestore(firebase_app)
-export default async function getSubDouments(collectionName, id, subCollectionName) {
+export default async function getSubDouments(collectionName, id) {
     let result = [];
     let error = null;
-
+    
     try {
-        const querySnapshot = await getDocs(collection(db, `${collectionName}/${id}/${subCollectionName}`));
-        querySnapshot.forEach((doc) => {
-            result.push({
-                id: doc.id,
+        const videoCategoryData = await getDoc(doc(db, collectionName, id));
+        const keys = Object.keys(videoCategoryData.data())
+        keys.forEach(key => {
+          result.push({
+                id: key,
+                title: videoCategoryData.data()[key],
                 categoryId: id,
-                ...doc.data()
             })
-        });
+        })
     } catch (e) {
+        console.log(e)
         error = e;
     }
 

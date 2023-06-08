@@ -62,8 +62,9 @@ export default function Videos({ params }) {
 
 
     const fetchVideos = async () => {
-        const fetchedVideosResponse = await getSubDouments('categories', params.id, 'videos');
+        const fetchedVideosResponse = await getSubDouments('categories', params.id);
         if (fetchedVideosResponse && !fetchedVideosResponse.error) {
+            console.log(fetchedVideosResponse.result)
             setVideos(fetchedVideosResponse.result);
         }
     }
@@ -88,7 +89,7 @@ export default function Videos({ params }) {
         if (video) {
             setSelectedVideo(video);
             setValue('title', video.title);
-            setValue('videoId', video.videoId);
+            setValue('videoId', video.id);
             onOpen();
         } else {
             toast({
@@ -214,7 +215,7 @@ export default function Videos({ params }) {
                                 videos && videos.map((video, index) =>
                                     <Tr key={index}>
                                         <Td>{video.title}</Td>
-                                        <Td>{video.videoId}</Td>
+                                        <Td>{video.id}</Td>
                                         <Td>
                                             <Button colorScheme='yellow' size='sm' margin={1} onClick={() => updateVideoHandler(video.id)}>
                                                 Edit

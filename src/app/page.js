@@ -14,7 +14,7 @@ import {
 
 } from '@chakra-ui/react';
 import { useEffect, useState } from 'react';
-import getDouments from './firebase/firestore/get-all-data';
+import getDocuments from './firebase/firestore/get-all-data';
 import addData from './firebase/firestore/add-data';
 import addSubData from './firebase/firestore/add-sub-data';
 import { useForm } from 'react-hook-form'
@@ -59,7 +59,7 @@ export default function Categories() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [mode, setMode] = useState('create');
   const fetchCategories = async () => {
-    const fetchedCategoriesResponse = await getDouments('categories');
+    const fetchedCategoriesResponse = await getDocuments('categories');
     if (fetchedCategoriesResponse && !fetchedCategoriesResponse.error) {
       setCategories(fetchedCategoriesResponse.result);
     }
