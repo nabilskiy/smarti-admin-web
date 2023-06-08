@@ -59,8 +59,6 @@ export default function Videos({ params }) {
     const toast = useToast();
 
 
-
-
     const fetchVideos = async () => {
         const fetchedVideosResponse = await getSubDouments('categories', params.id);
         if (fetchedVideosResponse && !fetchedVideosResponse.error) {
@@ -107,7 +105,9 @@ export default function Videos({ params }) {
     const onSubmit = async (values) => {
 
         const id = selectedVideo ? selectedVideo.id : null;
-        const addDataResaponse = await addSubData('categories', params.id, id, values);
+        console.log(values.title)
+        console.log(values.videoId)
+        const addDataResaponse = await addSubData('categories', params.id, id, values.title, values.videoId);
         if (addDataResaponse.error) {
             toast({
                 title: 'Error',
