@@ -59,13 +59,7 @@ export default function Videos({ params }) {
     const toast = useToast();
 
 
-    const fetchCategory = async () => {
-        const fetchedCategoryResponse = await getDoument('categories', params.id);
-        console.log(fetchedCategoryResponse);
-        if (fetchedCategoryResponse && !fetchedCategoryResponse.error) {
-            setSelectedcategory(fetchedCategoryResponse.result);
-        }
-    }
+
 
     const fetchVideos = async () => {
         const fetchedVideosResponse = await getSubDouments('categories', params.id, 'videos');
@@ -79,7 +73,6 @@ export default function Videos({ params }) {
       }, [user])
       
     useEffect(() => {
-        fetchCategory();
         fetchVideos();
     }, []);
 
@@ -198,7 +191,7 @@ export default function Videos({ params }) {
                     Sign Out
                 </Button>
                 <Heading>
-                    Category {selectedCategoty ? selectedCategoty.title : ""} Video List
+                    Category {params.id} Video List
                 </Heading>
                 <Box>
                     <Button colorScheme='teal' size='sm' margin={1} onClick={() => router.push(`/`)}>

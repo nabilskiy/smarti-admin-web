@@ -16,6 +16,7 @@ import {
 import { useEffect, useState } from 'react';
 import getDouments from './firebase/firestore/get-all-data';
 import addData from './firebase/firestore/add-data';
+import addSubData from './firebase/firestore/add-sub-data';
 import { useForm } from 'react-hook-form'
 import {
   FormErrorMessage,
@@ -37,16 +38,17 @@ import { useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from "./context/auth-context";
 import signOutAndExit from "./firebase/auth/signout";
+import getSubDouments from './firebase/firestore/get-all-sub-data';
+import deleteDocument from './firebase/firestore/delete-data';
 
 export default function Categories() {
   const { user } = useAuthContext()
 
   const router = useRouter();
-  const [selectedCategory, setSelectedCategory] = useState(null);
+
   const {
     handleSubmit,
     register,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     title: null
@@ -73,32 +75,38 @@ export default function Categories() {
 
   const createCategoryHandler = () => {
     setMode('create');
-    setSelectedCategory(null);
     onOpen()
   }
 
-  const updateCategoryHandler = (id) => {
-    setMode('update');
-    const category = categories.find(f => f.id === id);
-    if (category) {
-      setSelectedCategory(category);
-      setValue('title', category.title);
-      onOpen();
-    } else {
+  const deleteCategoryHandler = async (id) => {
+    const fetchedVideosResponse = await getSubDouments('categories', id, 'videos');
+    if (fetchedVideosResponse && !fetchedVideosResponse.error && fetchedVideosResponse.result.length > 0) {
       toast({
         title: 'Error',
-        description: "The selected category was not found",
+        description: "The selected category contains videos",
         status: 'error',
         duration: 9000,
         isClosable: true,
       });
+      return;
     }
+
+    const result = await deleteDocument('categories', id);
+    if (!result.error) {
+      toast({
+        title: 'Success',
+        description: "Category deleted.",
+        status: 'success',
+        duration: 9000,
+        isClosable: true,
+      });
+    }
+    await fetchCategories();
   }
 
 
   const onSubmit = async (values) => {
-    const id = selectedCategory ? selectedCategory.id : null;
-    const addDataResaponse = await addData('categories', id, values);
+    const addDataResaponse = await addData('categories', values);
     if (addDataResaponse.error) {
       toast({
         title: 'Error',
@@ -109,13 +117,19 @@ export default function Categories() {
       });
       return;
     }
-    setSelectedCategory(null);
-    if (mode === 'create') {
-      const newCategoryId = addDataResaponse.result.id;
-      router.push(`videos/${newCategoryId}`)
-    } else {
-      await fetchCategories();
+
+    const addSubDataResaponse = await addSubData('categories', values.title, null,
+      { title: values.videoTitle, videoId: values.videoId });
+    if (addSubDataResaponse.error) {
+      toast({
+        title: 'Error',
+        description: "Error in saving video",
+        status: 'error',
+        duration: 9000,
+        isClosable: true,
+      });
     }
+    await fetchCategories();
     onClose();
   }
 
@@ -147,6 +161,33 @@ export default function Categories() {
                   {errors.title && errors.title.message}
                 </FormErrorMessage>
               </FormControl>
+              <FormControl isInvalid={errors.videoTitle}>
+                <FormLabel htmlFor='videoTitle'>Video Title</FormLabel>
+                <Input
+                  id='videoTitle'
+                  placeholder='Video title'
+                  {...register('videoTitle', {
+                    required: 'Video title is required',
+                    minLength: { value: 4, message: 'Minimum length should be 3' },
+                  })}
+                />
+                <FormErrorMessage>
+                  {errors.videoTitle && errors.videoTitle.message}
+                </FormErrorMessage>
+              </FormControl>
+              <FormControl isInvalid={errors.videoId}>
+                <FormLabel htmlFor='videoId'>Link from youtube</FormLabel>
+                <Input
+                  id='videoId'
+                  placeholder='Video Link'
+                  {...register('videoId', {
+                    required: 'Video link is required',
+                  })}
+                />
+                <FormErrorMessage>
+                  {errors.videoId && errors.videoId.message}
+                </FormErrorMessage>
+              </FormControl>
             </ModalBody>
             <ModalFooter>
               <Button colorScheme='blue' mr={3} onClick={onClose}>
@@ -163,16 +204,16 @@ export default function Categories() {
   </Box>)
 
   const signOutHandler = async () => {
-   await signOutAndExit();
-   router.push('signin');
+    await signOutAndExit();
+    router.push('signin');
   }
 
   return (
     <>
       <Container margin={10} w="100%">
-      <Button colorScheme='orange' size='md' margin={1} onClick={signOutHandler}>
-        Sign Out
-      </Button>
+        <Button colorScheme='orange' size='md' margin={1} onClick={signOutHandler}>
+          Sign Out
+        </Button>
         <Heading>
           Categories
         </Heading>
@@ -190,13 +231,11 @@ export default function Categories() {
               {
                 categories && categories.map((category, index) =>
                   <Tr key={index}>
-                    <Td>{category.title}</Td>
+                    <Td>{category.id}</Td>
                     <Td>
-                      <Button colorScheme='yellow' size='sm' margin={1} onClick={() => updateCategoryHandler(category.id)}>
-                        Edit
-                      </Button>
 
-                      <Button colorScheme='red' size='sm' margin={1}>
+
+                      <Button colorScheme='red' size='sm' margin={1} onClick={() => deleteCategoryHandler(category.id)}>
                         Delete
                       </Button>
 
