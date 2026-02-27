@@ -1,6 +1,5 @@
 'use client';
-import { Container, Button, Heading } from '@chakra-ui/react';
-import { Box } from '@chakra-ui/react';
+import { Container, Button, Heading, Box, Flex } from '@chakra-ui/react';
 import getSubDouments from '../../firebase/firestore/get-all-sub-data';
 import {
     Table,
@@ -124,59 +123,70 @@ export default function Videos({ params }) {
     }
 
 
-    const renderModal = () => (<Box>
-        <Button colorScheme='blue' size='md' margin={1} onClick={createVideoHandler}>
-            New
-        </Button>
+    const renderModal = () => (
+        <Box>
+            <Button
+                colorScheme='blue'
+                size='md'
+                margin={1}
+                onClick={createVideoHandler}
+            >
+                New
+            </Button>
 
-        <Modal isOpen={isOpen} onClose={onClose}>
-            <ModalOverlay />
-            <form onSubmit={handleSubmit(onSubmit)}>
-                <ModalContent>
-                    <ModalHeader>{mode === 'create' ? 'Create Video' : 'Update Video'}</ModalHeader>
-                    <ModalCloseButton />
-                    <ModalBody>
-                        <FormControl isInvalid={errors.title}>
-                            <FormLabel htmlFor='title'>Title</FormLabel>
-                            <Input
-                                id='title'
-                                placeholder='Video title'
-                                {...register('title', {
-                                    required: 'Video title is required',
-                                    minLength: { value: 4, message: 'Minimum length should be 3' },
-                                })}
-                            />
-                            <FormErrorMessage>
-                                {errors.title && errors.title.message}
-                            </FormErrorMessage>
-                        </FormControl>
-                        <FormControl isInvalid={errors.videoId}>
-                            <FormLabel htmlFor='videoId'>Link from youtube</FormLabel>
-                            <Input
-                                id='videoId'
-                                placeholder='Video Link'
-                                {...register('videoId', {
-                                    required: 'Video link is required',
-                                })}
-                            />
-                            <FormErrorMessage>
-                                {errors.videoId && errors.videoId.message}
-                            </FormErrorMessage>
-                        </FormControl>
-                    </ModalBody>
-                    <ModalFooter>
-                        <Button colorScheme='blue' mr={3} onClick={onClose}>
-                            Close
-                        </Button>
-                        <Button colorScheme='teal' isLoading={isSubmitting} type='submit'>
-                            Save
-                        </Button>
-                    </ModalFooter>
-                </ModalContent>
-            </form>
-        </Modal>
+            <Modal
+                isOpen={isOpen}
+                onClose={onClose}
+                size={{ base: 'full', md: 'md' }}
+            >
+                <ModalOverlay />
+                <form onSubmit={handleSubmit(onSubmit)}>
+                    <ModalContent>
+                        <ModalHeader>{mode === 'create' ? 'Create Video' : 'Update Video'}</ModalHeader>
+                        <ModalCloseButton />
+                        <ModalBody>
+                            <FormControl isInvalid={errors.title}>
+                                <FormLabel htmlFor='title'>Title</FormLabel>
+                                <Input
+                                    id='title'
+                                    placeholder='Video title'
+                                    {...register('title', {
+                                        required: 'Video title is required',
+                                        minLength: { value: 4, message: 'Minimum length should be 3' },
+                                    })}
+                                />
+                                <FormErrorMessage>
+                                    {errors.title && errors.title.message}
+                                </FormErrorMessage>
+                            </FormControl>
+                            <FormControl isInvalid={errors.videoId}>
+                                <FormLabel htmlFor='videoId'>Link from youtube</FormLabel>
+                                <Input
+                                    id='videoId'
+                                    placeholder='Video Link'
+                                    {...register('videoId', {
+                                        required: 'Video link is required',
+                                    })}
+                                />
+                                <FormErrorMessage>
+                                    {errors.videoId && errors.videoId.message}
+                                </FormErrorMessage>
+                            </FormControl>
+                        </ModalBody>
+                        <ModalFooter>
+                            <Button colorScheme='blue' mr={3} onClick={onClose}>
+                                Close
+                            </Button>
+                            <Button colorScheme='teal' isLoading={isSubmitting} type='submit'>
+                                Save
+                            </Button>
+                        </ModalFooter>
+                    </ModalContent>
+                </form>
+            </Modal>
 
-    </Box>);
+        </Box>
+    );
 
 
 
@@ -187,20 +197,49 @@ export default function Videos({ params }) {
 
     return (
         <>
-            <Container margin={10} w="100%">
-                <Button colorScheme='orange' size='md' margin={1} onClick={signOutHandler}>
-                    Sign Out
-                </Button>
-                <Heading>
-                    Category {params.id} Video List
-                </Heading>
-                <Box>
-                    <Button colorScheme='teal' size='sm' margin={1} onClick={() => router.push(`/`)}>
-                        Back To Categories
-                    </Button>
-                </Box>
-                {renderModal()}
-                <TableContainer>
+            <Container
+                maxW="container.xl"
+                mx="auto"
+                px={{ base: 4, md: 8 }}
+                py={{ base: 6, md: 10 }}
+                w="100%"
+            >
+                <Flex
+                    direction={{ base: 'column', md: 'row' }}
+                    align={{ base: 'flex-start', md: 'center' }}
+                    justify="space-between"
+                    gap={4}
+                    mb={6}
+                >
+                    <Heading>
+                        Category {params.id} Video List
+                    </Heading>
+                    <Flex
+                        direction={{ base: 'column', sm: 'row' }}
+                        align={{ base: 'stretch', sm: 'center' }}
+                        gap={2}
+                        wrap="wrap"
+                    >
+                        <Button
+                            colorScheme='orange'
+                            size='md'
+                            onClick={signOutHandler}
+                            w={{ base: '100%', sm: 'auto' }}
+                        >
+                            Sign Out
+                        </Button>
+                        <Button
+                            colorScheme='teal'
+                            size='sm'
+                            onClick={() => router.push(`/`)}
+                            w={{ base: '100%', sm: 'auto' }}
+                        >
+                            Back To Categories
+                        </Button>
+                        {renderModal()}
+                    </Flex>
+                </Flex>
+                <TableContainer maxW="100%" overflowX="auto">
                     <Table variant='striped'>
                         <TableCaption>All Videos</TableCaption>
                         <Thead>
@@ -217,13 +256,19 @@ export default function Videos({ params }) {
                                         <Td>{video.title}</Td>
                                         <Td>{video.id}</Td>
                                         <Td>
-                                            <Button colorScheme='yellow' size='sm' margin={1} onClick={() => updateVideoHandler(video.id)}>
-                                                Edit
-                                            </Button>
+                                            <Flex wrap="wrap" gap={2}>
+                                                <Button
+                                                    colorScheme='yellow'
+                                                    size='sm'
+                                                    onClick={() => updateVideoHandler(video.id)}
+                                                >
+                                                    Edit
+                                                </Button>
 
-                                            <Button colorScheme='red' size='sm' margin={1}>
-                                                Delete
-                                            </Button>
+                                                <Button colorScheme='red' size='sm'>
+                                                    Delete
+                                                </Button>
+                                            </Flex>
                                         </Td>
                                     </Tr>
                                 )
