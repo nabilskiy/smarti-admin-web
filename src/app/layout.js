@@ -2,7 +2,7 @@ import { AuthContextProvider } from './context/auth-context';
 import { Providers } from "./providers";
 
 export const metadata = {
-  title: 'Firebase Simple App',
+  title: 'SmartiTV Admin',
   description: '',
 };
 

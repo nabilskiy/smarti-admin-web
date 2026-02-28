@@ -1,5 +1,5 @@
 'use client';
-import { Container, Button, Heading, Box, Flex, Spinner, Text, Stack, useBreakpointValue } from '@chakra-ui/react';
+import { Container, Button, Heading, Box, Flex, Spinner, Text, Stack, useBreakpointValue, Image } from '@chakra-ui/react';
 import {
     Table,
     Thead,
@@ -44,6 +44,7 @@ import { useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import signOutAndExit from "../../firebase/auth/signout";
 import { useAuthContext } from "../../context/auth-context";
+import { extractYoutubeVideoId } from '../../utils/extractYoutubeVideoId';
 
 export default function Videos({ params }) {
     const { user } = useAuthContext();
@@ -65,12 +66,16 @@ export default function Videos({ params }) {
         handleSubmit,
         register,
         setValue,
+        watch,
         formState: { errors, isSubmitting },
     } = useForm({
         title: null,
         videoId: null
     });
     const toast = useToast();
+    const [previewVideoId, setPreviewVideoId] = useState(null);
+    const [previewError, setPreviewError] = useState(false);
+    const watchedVideoId = watch('videoId');
 
     const categoryId = params?.id != null ? decodeURIComponent(String(params.id)) : undefined;
 
@@ -107,6 +112,17 @@ export default function Videos({ params }) {
         fetchVideos();
     }, [categoryId]);
 
+    useEffect(() => {
+        if (!watchedVideoId || typeof watchedVideoId !== 'string') {
+            setPreviewVideoId(null);
+            setPreviewError(false);
+            return;
+        }
+        const { videoId, error } = extractYoutubeVideoId(watchedVideoId);
+        setPreviewVideoId(error ? null : videoId);
+        setPreviewError(false);
+    }, [watchedVideoId]);
+
     const createVideoHandler = () => {
         setMode('create');
         setSelectedVideo(null);
@@ -134,13 +150,25 @@ export default function Videos({ params }) {
 
     const onSubmit = async (values) => {
         const title = values.title?.trim();
-        const videoId = values.videoId?.trim();
-        if (!title || !videoId) {
+        const rawVideoInput = values.videoId?.trim();
+        if (!title || !rawVideoInput) {
             toast({
                 title: 'Error',
                 description: 'Title and Video link are required.',
                 status: 'error',
                 duration: 5000,
+                isClosable: true,
+            });
+            return;
+        }
+
+        const { videoId: extractedId, error: extractError } = extractYoutubeVideoId(rawVideoInput);
+        if (extractError) {
+            toast({
+                title: 'Invalid video link',
+                description: extractError,
+                status: 'error',
+                duration: 7000,
                 isClosable: true,
             });
             return;
@@ -152,11 +180,11 @@ export default function Videos({ params }) {
                 'categories',
                 categoryId,
                 selectedVideo.id,
-                videoId,
+                extractedId,
                 title
             );
         } else {
-            res = await addSubData('categories', categoryId, null, title, videoId);
+            res = await addSubData('categories', categoryId, null, title, extractedId);
         }
 
         if (res.error) {
@@ -177,7 +205,7 @@ export default function Videos({ params }) {
             isClosable: true,
         });
         setSelectedVideo(null);
-        onClose();
+        handleModalClose();
         await fetchVideos();
     };
 
@@ -222,6 +250,12 @@ export default function Videos({ params }) {
         setVideoToDelete(null);
     };
 
+    const handleModalClose = () => {
+        setPreviewVideoId(null);
+        setPreviewError(false);
+        onClose();
+    };
+
     const renderModal = () => (
         <Box w={{ base: '100%', sm: 'auto' }}>
             <Button
@@ -240,7 +274,7 @@ export default function Videos({ params }) {
 
             <Modal
                 isOpen={isOpen}
-                onClose={onClose}
+                onClose={handleModalClose}
                 size={{ base: 'full', md: 'md' }}
             >
                 <ModalOverlay bg='blackAlpha.600' backdropFilter='blur(4px)' />
@@ -265,22 +299,49 @@ export default function Videos({ params }) {
                                 </FormErrorMessage>
                             </FormControl>
                             <FormControl isInvalid={errors.videoId}>
-                                <FormLabel htmlFor='videoId' fontSize={{ base: 'sm', md: 'md' }}>Link from youtube</FormLabel>
+                                <FormLabel htmlFor='videoId' fontSize={{ base: 'sm', md: 'md' }}>YouTube URL or video ID</FormLabel>
                                 <Input
                                     id='videoId'
-                                    placeholder='Video Link'
+                                    placeholder='Paste YouTube link or video ID (e.g. youtube.com/watch?v=... or youtu.be/...)'
                                     size={{ base: 'md', md: 'md' }}
                                     {...register('videoId', {
-                                        required: 'Video link is required',
+                                        required: 'Video link or URL is required',
                                     })}
                                 />
                                 <FormErrorMessage>
                                     {errors.videoId && errors.videoId.message}
                                 </FormErrorMessage>
                             </FormControl>
+                            {previewVideoId && (
+                                <Box mt={4}>
+                                    <Text fontSize="xs" color="gray.500" mb={2}>Preview</Text>
+                                    <Box
+                                        borderRadius="lg"
+                                        overflow="hidden"
+                                        borderWidth="1px"
+                                        borderColor="gray.200"
+                                        bg="gray.50"
+                                        w="100%"
+                                        maxW="320px"
+                                    >
+                                        {!previewError ? (
+                                            <Image
+                                                src={`https://img.youtube.com/vi/${previewVideoId}/maxresdefault.jpg`}
+                                                alt="Video thumbnail"
+                                                w="100%"
+                                                onError={() => setPreviewError(true)}
+                                            />
+                                        ) : (
+                                            <Flex h="120px" align="center" justify="center" bg="gray.100">
+                                                <Text fontSize="sm" color="gray.500">Preview unavailable</Text>
+                                            </Flex>
+                                        )}
+                                    </Box>
+                                </Box>
+                            )}
                         </ModalBody>
                         <ModalFooter px={{ base: 4, md: 6 }} pb={{ base: 6, md: 4 }} gap={2} flexWrap="wrap">
-                            <Button colorScheme='blue' onClick={onClose} variant='outline' _hover={{ bg: 'gray.50' }} minH={{ base: '44px', md: '40px' }} flex={{ base: '1', md: 'none' }}>
+                            <Button colorScheme='blue' onClick={handleModalClose} variant='outline' _hover={{ bg: 'gray.50' }} minH={{ base: '44px', md: '40px' }} flex={{ base: '1', md: 'none' }}>
                                 Close
                             </Button>
                             <Button colorScheme='teal' isLoading={isSubmitting} type='submit' _hover={{ boxShadow: 'md' }} minH={{ base: '44px', md: '40px' }} flex={{ base: '1', md: 'none' }}>
