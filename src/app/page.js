@@ -15,7 +15,7 @@ import {
 import { useEffect, useState } from 'react';
 import getDocuments from './firebase/firestore/get-all-data';
 import addData from './firebase/firestore/add-data';
-import addSubData from './firebase/firestore/add-sub-data';
+import getSubDouments from './firebase/firestore/get-all-sub-data';
 import { useForm } from 'react-hook-form'
 import {
   FormErrorMessage,
@@ -37,7 +37,6 @@ import { useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from "./context/auth-context";
 import signOutAndExit from "./firebase/auth/signout";
-import getSubDouments from './firebase/firestore/get-all-sub-data';
 import deleteDocument from './firebase/firestore/delete-data';
 
 export default function Categories() {
@@ -78,7 +77,7 @@ export default function Categories() {
   }
 
   const deleteCategoryHandler = async (id) => {
-    const fetchedVideosResponse = await getSubDouments('categories', id, 'videos');
+    const fetchedVideosResponse = await getSubDouments('categories', id);
     if (fetchedVideosResponse && !fetchedVideosResponse.error && fetchedVideosResponse.result.length > 0) {
       toast({
         title: 'Error',
@@ -105,8 +104,7 @@ export default function Categories() {
 
 
   const onSubmit = async (values) => {
-
-    const addDataResaponse = await addData('categories',  values.title, values.videoId, values.videoTitle);
+    const addDataResaponse = await addData('categories', values.title, values.videoId, values.videoTitle);
     if (addDataResaponse.error) {
       toast({
         title: 'Error',
@@ -117,18 +115,6 @@ export default function Categories() {
       });
       return;
     }
-
-    // const addSubDataResaponse = await addSubData('categories', values.title, null,
-    //   { title: values.videoTitle, videoId: values.videoId });
-    // if (addSubDataResaponse.error) {
-    //   toast({
-    //     title: 'Error',
-    //     description: "Error in saving video",
-    //     status: 'error',
-    //     duration: 9000,
-    //     isClosable: true,
-    //   });
-    // }
     await fetchCategories();
     onClose();
   }
@@ -142,6 +128,9 @@ export default function Categories() {
           size='md'
           margin={1}
           onClick={createCategoryHandler}
+          boxShadow='sm'
+          _hover={{ boxShadow: 'md', transform: 'translateY(-1px)' }}
+          _active={{ transform: 'translateY(0)' }}
         >
           New
         </Button>
@@ -151,15 +140,15 @@ export default function Categories() {
           onClose={onClose}
           size={{ base: 'full', md: 'md' }}
         >
-          <ModalOverlay />
+          <ModalOverlay bg='blackAlpha.600' backdropFilter='blur(4px)' />
           <form onSubmit={handleSubmit(onSubmit)}>
-            <ModalContent>
-              <ModalHeader>
+            <ModalContent borderRadius='xl' boxShadow='2xl'>
+              <ModalHeader pb={2}>
                 {mode === 'create' ? 'Create Category' : 'Update Category'}
               </ModalHeader>
-              <ModalCloseButton />
-              <ModalBody>
-                <FormControl isInvalid={errors.title}>
+              <ModalCloseButton top={4} right={4} />
+              <ModalBody pt={2}>
+                <FormControl isInvalid={errors.title} mb={4}>
                   <FormLabel htmlFor='ttile'>Title</FormLabel>
                   <Input
                     id='title'
@@ -173,7 +162,7 @@ export default function Categories() {
                     {errors.title && errors.title.message}
                   </FormErrorMessage>
                 </FormControl>
-                <FormControl isInvalid={errors.videoTitle}>
+                <FormControl isInvalid={errors.videoTitle} mb={4}>
                   <FormLabel htmlFor='videoTitle'>Video Title</FormLabel>
                   <Input
                     id='videoTitle'
@@ -202,10 +191,10 @@ export default function Categories() {
                 </FormControl>
               </ModalBody>
               <ModalFooter>
-                <Button colorScheme='blue' mr={3} onClick={onClose}>
+                <Button colorScheme='blue' mr={3} onClick={onClose} variant='outline' _hover={{ bg: 'gray.50' }}>
                   Close
                 </Button>
-                <Button colorScheme='teal' isLoading={isSubmitting} type='submit'>
+                <Button colorScheme='teal' isLoading={isSubmitting} type='submit' _hover={{ boxShadow: 'md' }}>
                   Save
                 </Button>
               </ModalFooter>
@@ -230,71 +219,84 @@ export default function Categories() {
         py={{ base: 6, md: 10 }}
         w="100%"
       >
-        <Flex
-          direction={{ base: 'column', md: 'row' }}
-          align={{ base: 'flex-start', md: 'center' }}
-          justify="space-between"
-          gap={4}
-          mb={6}
+        <Box
+          bg="white"
+          borderRadius="xl"
+          boxShadow="sm"
+          p={{ base: 5, md: 8 }}
+          mb={8}
         >
-          <Heading>
-            Categories
-          </Heading>
           <Flex
-            direction={{ base: 'column', sm: 'row' }}
-            align={{ base: 'stretch', sm: 'center' }}
-            gap={2}
-            wrap="wrap"
+            direction={{ base: 'column', md: 'row' }}
+            align={{ base: 'flex-start', md: 'center' }}
+            justify="space-between"
+            gap={4}
+            mb={8}
           >
-            <Button
-              colorScheme='orange'
-              size='md'
-              onClick={signOutHandler}
-              w={{ base: '100%', sm: 'auto' }}
+            <Heading size="lg" fontWeight="600" color="gray.800">
+              Categories
+            </Heading>
+            <Flex
+              direction={{ base: 'column', sm: 'row' }}
+              align={{ base: 'stretch', sm: 'center' }}
+              gap={3}
+              wrap="wrap"
             >
-              Sign Out
-            </Button>
-            {renderModal()}
+              <Button
+                colorScheme='orange'
+                size='md'
+                onClick={signOutHandler}
+                w={{ base: '100%', sm: 'auto' }}
+                boxShadow='sm'
+                _hover={{ boxShadow: 'md', transform: 'translateY(-1px)' }}
+                _active={{ transform: 'translateY(0)' }}
+              >
+                Sign Out
+              </Button>
+              {renderModal()}
+            </Flex>
           </Flex>
-        </Flex>
-        <TableContainer maxW="100%" overflowX="auto">
-          <Table variant='striped'>
-            <TableCaption>All Categories</TableCaption>
-            <Thead>
-              <Tr>
-                <Th>Title</Th>
-                <Th>Actions</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {
-                categories && categories.map((category, index) =>
-                  <Tr key={index}>
-                    <Td>{category.id}</Td>
-                    <Td>
-                      <Flex wrap="wrap" gap={2}>
-                        <Button
-                          colorScheme='red'
-                          size='sm'
-                          onClick={() => deleteCategoryHandler(category.id)}
-                        >
-                          Delete
-                        </Button>
-                        <Button
-                          colorScheme='teal'
-                          size='sm'
-                          onClick={() => router.push(`videos/${category.id}`)}
-                        >
-                          Videos
-                        </Button>
-                      </Flex>
-                    </Td>
-                  </Tr>
-                )
-              }
-            </Tbody>
-          </Table>
-        </TableContainer>
+          <TableContainer maxW="100%" overflowX="auto" borderRadius="lg" borderWidth="1px" borderColor="gray.100" overflow="hidden">
+            <Table variant='striped' size="sm">
+              <TableCaption placement="top" textAlign="left" fontWeight="500" color="gray.600" mb={2}>All Categories</TableCaption>
+              <Thead bg="gray.50">
+                <Tr>
+                  <Th py={4}>Title</Th>
+                  <Th py={4}>Actions</Th>
+                </Tr>
+              </Thead>
+              <Tbody>
+                {
+                  categories && categories.map((category, index) =>
+                    <Tr key={index} _hover={{ bg: 'gray.50' }} transition="background 0.15s">
+                      <Td py={4} fontWeight="500">{category.id}</Td>
+                      <Td py={4}>
+                        <Flex wrap="wrap" gap={2}>
+                          <Button
+                            colorScheme='red'
+                            size='sm'
+                            onClick={() => deleteCategoryHandler(category.id)}
+                            _hover={{ boxShadow: 'sm' }}
+                          >
+                            Delete
+                          </Button>
+                          <Button
+                            colorScheme='teal'
+                            size='sm'
+                            onClick={() => router.push(`videos/${category.id}`)}
+                            _hover={{ boxShadow: 'sm' }}
+                          >
+                            Videos
+                          </Button>
+                        </Flex>
+                      </Td>
+                    </Tr>
+                  )
+                }
+              </Tbody>
+            </Table>
+          </TableContainer>
+        </Box>
       </Container>
     </>
   )

@@ -2,7 +2,7 @@ import firebase_app from "../config";
 import { getFirestore, doc, deleteDoc } from "firebase/firestore";
 
 const db = getFirestore(firebase_app)
-export default async function deleteDocuemnt(collectionName, id) {
+export default async function deleteDocument(collectionName, id) {
     let result = [];
     let error = null;
 

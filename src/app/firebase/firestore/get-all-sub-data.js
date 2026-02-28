@@ -5,17 +5,21 @@ const db = getFirestore(firebase_app)
 export default async function getSubDouments(collectionName, id) {
     let result = [];
     let error = null;
-    
+    const decodedId = decodeURIComponent(id);
     try {
-        const videoCategoryData = await getDoc(doc(db, collectionName, id));
-        const keys = Object.keys(videoCategoryData.data())
+        const videoCategoryData = await getDoc(doc(db, collectionName, decodedId));
+        const data = videoCategoryData.exists() ? videoCategoryData.data() : null;
+        if (!data || typeof data !== 'object') {
+            return { result: [], error: null };
+        }
+        const keys = Object.keys(data);
         keys.forEach(key => {
-          result.push({
+            result.push({
                 id: key,
-                title: videoCategoryData.data()[key],
-                categoryId: id,
-            })
-        })
+                title: data[key],
+                categoryId: decodedId,
+            });
+        });
     } catch (e) {
         console.log(e)
         error = e;
