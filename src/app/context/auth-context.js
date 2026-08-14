@@ -6,8 +6,6 @@ import {
 } from 'firebase/auth';
 import firebase_app from '../firebase/config';
 
-const auth = getAuth(firebase_app);
-
 export const AuthContext = React.createContext({});
 
 export const useAuthContext = () => React.useContext(AuthContext);
@@ -19,6 +17,7 @@ export const AuthContextProvider = ({
     const [loading, setLoading] = React.useState(true);
 
     React.useEffect(() => {
+        const auth = getAuth(firebase_app);
         const unsubscribe = onAuthStateChanged(auth, (user) => {
             if (user) {
                 setUser(user);
@@ -33,7 +32,11 @@ export const AuthContextProvider = ({
 
     return (
         <AuthContext.Provider value={{ user }}>
-            {loading ? <div>Loading...</div> : children}
+            {loading ? (
+                <div className="flex min-h-screen items-center justify-center bg-background text-muted-foreground">
+                    Загрузка...
+                </div>
+            ) : children}
         </AuthContext.Provider>
     );
 };

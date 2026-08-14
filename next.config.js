@@ -1,6 +1,4 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {
-    appDir:'dashboard'
-}
+const nextConfig = {};
 
-module.exports = nextConfig
+module.exports = nextConfig;

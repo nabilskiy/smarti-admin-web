@@ -1,114 +1,102 @@
-'use client'
+'use client';
 
-import React from "react";
-import {
-    Container,
-    Heading,
-    Box,
-    FormErrorMessage,
-    FormLabel,
-    FormControl,
-    Input,
-    Button,
-    Stack,
-} from "@chakra-ui/react";
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useForm } from 'react-hook-form'
-import { useToast } from '@chakra-ui/react';
-import signIn from "../firebase/auth/signin";
+import { Eye, EyeOff, Lock } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import Button from '@/app/components/ui/Button';
+import Input from '@/app/components/ui/Input';
+import BrandLogo from '@/app/components/BrandLogo';
+import SplashIntro from '@/app/components/SplashIntro';
+import signIn from '@/app/firebase/auth/signin';
+import { cn } from '@/lib/utils';
 
-export default function Signin() {
-    const router = useRouter();
-    const toast = useToast();
-    const {
-        handleSubmit,
-        register,
-        formState: { errors, isSubmitting },
-    } = useForm({
-        email: null,
-        password: null
-    });
+export default function SigninPage() {
+  const router = useRouter();
+  const [error, setError] = useState('');
+  const [splashDone, setSplashDone] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting },
+  } = useForm({
+    defaultValues: { email: '', password: '' },
+  });
 
-    const onSubmit = async (values) => {
-        const {email,password} = values;
-        const { result, error } = await signIn(email, password);
-
-        if (error) {
-            toast({
-                title: 'Error',
-                description: "Invalid credentials",
-                status: 'error',
-                duration: 9000,
-                isClosable: true,
-            });
-           return;
-        }
-        return router.push("/");
+  const onSubmit = async (values) => {
+    setError('');
+    const { result, error: signInError } = await signIn(values.email, values.password);
+    if (signInError || !result) {
+      setError('Неверный email или пароль');
+      return;
     }
+    router.push('/categories');
+  };
 
-    return (<>
-        <Container
-            maxW="sm"
-            mx="auto"
-            px={{ base: 4, md: 0 }}
-            py={{ base: 8, md: 16 }}
-            w="100%"
-        >
-            <Box
-                bg="white"
-                borderRadius="xl"
-                boxShadow="lg"
-                p={8}
-                borderWidth="1px"
-                borderColor="gray.100"
-            >
-                <Heading size="lg" fontWeight="600" color="gray.800" mb={8}>
-                    Sign In
-                </Heading>
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    <Stack spacing={5}>
-                        <FormControl isInvalid={errors.email}>
-                            <FormLabel htmlFor='email' fontWeight="500" color="gray.700">Email</FormLabel>
-                            <Input
-                                id='email'
-                                placeholder='email'
-                                {...register('email', {
-                                    required: 'Email is required',
-                                })}
-                            />
-                            <FormErrorMessage>
-                                {errors.email && errors.email.message}
-                            </FormErrorMessage>
-                        </FormControl>
-                        <FormControl isInvalid={errors.password}>
-                            <FormLabel htmlFor='password' fontWeight="500" color="gray.700">Password</FormLabel>
-                            <Input
-                                id='password'
-                                type="password"
-                                placeholder='password'
-                                {...register('password', {
-                                    required: 'Password is required',
-                                })}
-                            />
-                            <FormErrorMessage>
-                                {errors.password && errors.password.message}
-                            </FormErrorMessage>
-                        </FormControl>
-                        <Button
-                            colorScheme='teal'
-                            isLoading={isSubmitting}
-                            type='submit'
-                            w="100%"
-                            mt={2}
-                            size="md"
-                            _hover={{ boxShadow: 'md', transform: 'translateY(-1px)' }}
-                            _active={{ transform: 'translateY(0)' }}
-                        >
-                            Signin
-                        </Button>
-                    </Stack>
-                </form>
-            </Box>
-        </Container>
-    </>)
+  return (
+    <div className="relative flex min-h-screen w-full items-center justify-center bg-background p-4">
+      <SplashIntro onFinished={() => setSplashDone(true)} />
+      <div
+        className={cn('w-full max-w-md', splashDone && 'animate-fade-in-up', !splashDone && 'pointer-events-none')}
+        aria-hidden={!splashDone}
+      >
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex justify-center">
+            <BrandLogo size={80} />
+          </div>
+          <p className="text-sm text-muted-foreground">Вход в админ-панель</p>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-card p-8 shadow-2xl shadow-black/20">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm text-foreground/90">
+                Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="admin@example.com"
+                error={Boolean(errors.email)}
+                {...register('email', { required: 'Email обязателен' })}
+              />
+              {errors.email ? <p className="text-sm text-destructive">{errors.email.message}</p> : null}
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm text-foreground/90">
+                Пароль
+              </label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  className="pr-10"
+                  error={Boolean(errors.password)}
+                  {...register('password', { required: 'Пароль обязателен' })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                  aria-label={showPassword ? 'Скрыть пароль' : 'Показать пароль'}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              {errors.password ? (
+                <p className="text-sm text-destructive">{errors.password.message}</p>
+              ) : null}
+            </div>
+            {error ? <p className="text-sm text-destructive">{error}</p> : null}
+            <Button type="submit" className="mt-6 w-full" size="lg" disabled={isSubmitting}>
+              <Lock className="mr-2 h-4 w-4" />
+              {isSubmitting ? 'Вход...' : 'Войти'}
+            </Button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
 }

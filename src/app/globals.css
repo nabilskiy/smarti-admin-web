@@ -3,12 +3,64 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 30, 41, 59;
-  --background-rgb: 248, 250, 252;
+  --font-size: 16px;
+  --background: #101012;
+  --foreground: #f0f0f2;
+  --card: #1a1a1e;
+  --card-foreground: #f0f0f2;
+  --popover: #1a1a1e;
+  --popover-foreground: #f0f0f2;
+  --primary: #0fa1a6;
+  --primary-foreground: #06181a;
+  --secondary: #242428;
+  --secondary-foreground: #f0f0f2;
+  --muted: #242428;
+  --muted-foreground: #9a9aa0;
+  --accent: #2a2a30;
+  --accent-foreground: #f0f0f2;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #2e2e34;
+  --input: #2e2e34;
+  --ring: #0fa1a6;
+  --radius: 0.5rem;
+  --sidebar: #141416;
+  --sidebar-foreground: #f0f0f2;
+  --sidebar-primary: #0fa1a6;
+  --sidebar-primary-foreground: #06181a;
+  --sidebar-accent: #242428;
+  --sidebar-accent-foreground: #f0f0f2;
+  --sidebar-border: #2e2e34;
+  --sidebar-ring: #0fa1a6;
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
-  min-height: 100vh;
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-size: var(--font-size);
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-background text-foreground min-h-screen antialiased;
+  }
+
+  h1 {
+    @apply text-2xl font-medium leading-tight;
+  }
+
+  h2 {
+    @apply text-xl font-medium leading-tight;
+  }
+
+  h3 {
+    @apply text-lg font-medium leading-snug;
+  }
+
+  label {
+    @apply text-sm font-medium;
+  }
 }
